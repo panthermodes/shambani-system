@@ -1,0 +1,594 @@
+# Orders/Marketplace GraphQL Schema
+type Order {
+  id: String!
+  userId: String!
+  orderNumber: String!
+  type: String! # PRODUCT, SERVICE
+  status: String! # PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, REFUNDED
+  totalAmount: Float!
+  currency: String!
+  subtotal: Float!
+  taxAmount: Float!
+  shippingAmount: Float!
+  discountAmount: Float!
+  finalAmount: Float!
+  paymentStatus: String! # PENDING, PAID, FAILED, REFUNDED
+  paymentMethod: String! # CASH, BANK_TRANSFER, MOBILE_MONEY, CREDIT_CARD
+  shippingAddress: Address!
+  billingAddress: Address!
+  orderDate: DateTime!
+  confirmedDate: DateTime
+  shippedDate: DateTime
+  deliveredDate: DateTime
+  estimatedDelivery: DateTime
+  trackingNumber: String
+  notes: String
+  metadata: Json
+  user: User!
+  items: [OrderItem!]!
+  payments: [Payment!]!
+  reviews: [Review!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OrderItem {
+  id: String!
+  orderId: String!
+  productId: String
+  name: String!
+  description: String
+  quantity: Int!
+  unitPrice: Float!
+  totalPrice: Float!
+  currency: String!
+  product: Product
+  specifications: Json
+  customizations: Json
+  status: String! # ORDERED, SHIPPED, DELIVERED, CANCELLED
+  trackingInfo: String
+  notes: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Product {
+  id: String!
+  sellerId: String!
+  name: String!
+  description: String
+  category: String!
+  subcategory: String
+  price: Float!
+  currency: String!
+  quantity: Int
+  unit: String! # kg, liters, pieces, bags, etc.
+  images: [String!]!
+  location: String
+  region: String!
+  district: String!
+  isActive: Boolean!
+  isVerified: Boolean!
+  isFeatured: Boolean
+  tags: [String!]!
+  specifications: Json
+  shippingOptions: [ShippingOption!]!
+  returnPolicy: ReturnPolicy
+  seller: User!
+  reviews: [Review!]!
+  averageRating: Float!
+  reviewCount: Int!
+  viewCount: Int!
+  favoriteCount: Int!
+  stockStatus: String! # IN_STOCK, OUT_OF_STOCK, LIMITED_STOCK
+  minOrderQuantity: Int!
+  maxOrderQuantity: Int
+  bulkPricing: [BulkPricing!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Payment {
+  id: String!
+  orderId: String!
+  userId: String!
+  amount: Float!
+  currency: String!
+  method: String!
+  status: String! # PENDING, COMPLETED, FAILED, REFUNDED
+  transactionId: String
+  gateway: String!
+  gatewayResponse: Json
+  processedAt: DateTime
+  refundedAt: DateTime
+  refundAmount: Float
+  refundReason: String
+  metadata: Json
+  user: User!
+  order: Order!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Review {
+  id: String!
+  userId: String!
+  productId: String
+  orderId: String
+  rating: Int! # 1-5 stars
+  title: String
+  comment: String
+  images: [String!]!
+  verified: Boolean!
+  helpful: Int!
+  response: String
+  responseDate: DateTime
+  metadata: Json
+  user: User!
+  product: Product
+  order: Order
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Address {
+  street: String!
+  city: String!
+  region: String!
+  district: String!
+  postalCode: String
+  country: String!
+  coordinates: Coordinates
+  isDefault: Boolean!
+}
+
+type Coordinates {
+  latitude: Float!
+  longitude: Float!
+}
+
+type ShippingOption {
+  method: String!
+  cost: Float!
+  estimatedDays: Int!
+  description: String!
+  available: Boolean!
+}
+
+type ReturnPolicy {
+  days: Int!
+  conditions: String!
+  process: String!
+  restockingFee: Float!
+}
+
+type BulkPricing {
+  minQuantity: Int!
+  maxQuantity: Int!
+  unitPrice: Float!
+  discount: Float!
+}
+
+type OrderStats {
+  totalOrders: Int!
+  totalRevenue: Float!
+  averageOrderValue: Float!
+  ordersByStatus: [OrderStatusStats!]!
+  ordersByType: [OrderTypeStats!]!
+  ordersByRegion: [OrderRegionStats!]!
+  monthlyTrend: [MonthlyOrderStats!]!
+  topProducts: [TopProductStats!]!
+  topCustomers: [TopCustomerStats!]!
+  paymentMethodStats: [PaymentMethodStats!]!
+}
+
+type OrderStatusStats {
+  status: String!
+  count: Int!
+  percentage: Float!
+  totalValue: Float!
+}
+
+type OrderTypeStats {
+  type: String!
+  count: Int!
+  percentage: Float!
+  totalValue: Float!
+}
+
+type OrderRegionStats {
+  region: String!
+  district: String!
+  orderCount: Int!
+  totalValue: Float!
+  averageOrderValue: Float!
+}
+
+type MonthlyOrderStats {
+  month: String!
+  year: Int!
+  orderCount: Int!
+  totalRevenue: Float!
+  averageOrderValue: Float!
+}
+
+type TopProductStats {
+  productId: String!
+  productName: String!
+  orderCount: Int!
+  totalRevenue: Float!
+  averageRating: Float!
+}
+
+type TopCustomerStats {
+  userId: String!
+  customerName: String!
+  orderCount: Int!
+  totalSpent: Float!
+  averageOrderValue: Float!
+}
+
+type PaymentMethodStats {
+  method: String!
+  count: Int!
+  percentage: Float!
+  totalValue: Float!
+  successRate: Float!
+}
+
+extend type Query {
+  # Orders
+  getOrders(
+    status: String
+    type: String
+    paymentStatus: String
+    startDate: DateTime
+    endDate: DateTime
+    limit: Int
+    offset: Int
+  ): [Order!]!
+  
+  getOrder(id: String!): Order
+  
+  # Products
+  getProducts(
+    category: String
+    subcategory: String
+    region: String
+    district: String
+    priceMin: Float
+    priceMax: Float
+    inStock: Boolean
+    verified: Boolean
+    featured: Boolean
+    tags: [String!]
+    search: String
+    limit: Int
+    offset: Int
+  ): [Product!]!
+  
+  getProduct(id: String!): Product
+  
+  getMyProducts(
+    status: String
+    category: String
+    limit: Int
+    offset: Int
+  ): [Product!]!
+  
+  # Reviews
+  getReviews(productId: String, userId: String, rating: Int): [Review!]!
+  
+  getReview(id: String!): Review
+  
+  # Payments
+  getPayments(
+    orderId: String
+    status: String
+    method: String
+    startDate: DateTime
+    endDate: DateTime
+  ): [Payment!]!
+  
+  getPayment(id: String!): Payment
+  
+  # Statistics
+  getOrderStats(
+    region: String
+    district: String
+    startDate: DateTime
+    endDate: DateTime
+  ): OrderStats!
+  
+  getAdminOrderStats(
+    region: String
+    district: String
+    startDate: DateTime
+    endDate: DateTime
+  ): OrderStats!
+  
+  getProductStats(
+    productId: String
+    region: String
+    startDate: DateTime
+    endDate: DateTime
+  ): ProductStats!
+  
+  # Search
+  searchProducts(query: String!, filters: ProductSearchFilters): ProductSearchResult!
+}
+
+extend type Mutation {
+  # Orders
+  createOrder(input: CreateOrderInput!): Order!
+  
+  updateOrder(id: String!, input: UpdateOrderInput!): Order!
+  
+  cancelOrder(id: String!, reason: String!): Order!
+  
+  confirmOrder(id: String!): Order!
+  
+  shipOrder(id: String!, input: ShipOrderInput!): Order!
+  
+  deliverOrder(id: String!, input: DeliverOrderInput!): Order!
+  
+  refundOrder(id: String!, input: RefundOrderInput!): Order!
+  
+  # Products
+  createProduct(input: CreateProductInput!): Product!
+  
+  updateProduct(id: String!, input: UpdateProductInput!): Product!
+  
+  deleteProduct(id: String!): Boolean!
+  
+  activateProduct(id: String!): Product!
+  
+  deactivateProduct(id: String!): Product!
+  
+  verifyProduct(id: String!): Product!
+  
+  featureProduct(id: String!, featured: Boolean!): Product!
+  
+  updateProductStock(productId: String!, quantity: Int!): Product!
+  
+  # Reviews
+  createReview(input: CreateReviewInput!): Review!
+  
+  updateReview(id: String!, input: UpdateReviewInput!): Review!
+  
+  deleteReview(id: String!): Boolean!
+  
+  markReviewHelpful(reviewId: String!): Review!
+  
+  respondToReview(reviewId: String!, response: String!): Review!
+  
+  # Payments
+  createPayment(input: CreatePaymentInput!): Payment!
+  
+  processPayment(paymentId: String!): Payment!
+  
+  refundPayment(paymentId: String!, input: RefundPaymentInput!): Payment!
+}
+
+type ProductStats {
+  productId: String!
+  totalViews: Int!
+  totalOrders: Int!
+  totalRevenue: Float!
+  averageRating: Float!
+  reviewCount: Int!
+  conversionRate: Float!
+  monthlyStats: [MonthlyProductStats!]!
+}
+
+type MonthlyProductStats {
+  month: String!
+  year: Int!
+  views: Int!
+  orders: Int!
+  revenue: Float!
+  rating: Float!
+}
+
+type ProductSearchResult {
+  products: [Product!]!
+  totalCount: Int!
+  facets: SearchFacets!
+  suggestions: [String!]!
+}
+
+type SearchFacets {
+  categories: [CategoryFacet!]!
+  regions: [RegionFacet!]!
+  priceRanges: [PriceRangeFacet!]!
+  ratings: [RatingFacet!]!
+}
+
+type CategoryFacet {
+  category: String!
+  count: Int!
+}
+
+type RegionFacet {
+  region: String!
+  count: Int!
+}
+
+type PriceRangeFacet {
+  min: Float!
+  max: Float!
+  count: Int!
+}
+
+type RatingFacet {
+  rating: Int!
+  count: Int!
+}
+
+input ProductSearchFilters {
+  category: String
+  subcategory: String
+  region: String
+  district: String
+  priceMin: Float
+  priceMax: Float
+  inStock: Boolean
+  verified: Boolean
+  featured: Boolean
+  tags: [String!]
+  sortBy: String
+  sortOrder: String
+}
+
+input CreateOrderInput {
+  type: String!
+  items: [OrderItemInput!]!
+  shippingAddress: AddressInput!
+  billingAddress: AddressInput
+  paymentMethod: String!
+  notes: String
+}
+
+input UpdateOrderInput {
+  status: String
+  shippingAddress: AddressInput
+  billingAddress: AddressInput
+  notes: String
+}
+
+input ShipOrderInput {
+  trackingNumber: String!
+  carrier: String!
+  estimatedDelivery: DateTime!
+  notes: String
+}
+
+input DeliverOrderInput {
+  deliveryDate: DateTime!
+  deliveryNotes: String
+  deliveryProof: String
+  recipientName: String
+}
+
+input RefundOrderInput {
+  reason: String!
+  amount: Float!
+  refundMethod: String!
+  notes: String
+}
+
+input CreateProductInput {
+  name: String!
+  description: String
+  category: String!
+  subcategory: String
+  price: Float!
+  currency: String!
+  quantity: Int!
+  unit: String!
+  images: [String!]!
+  location: String!
+  region: String!
+  district: String!
+  tags: [String!]!
+  specifications: Json
+  shippingOptions: [ShippingOptionInput!]!
+  returnPolicy: ReturnPolicyInput!
+  minOrderQuantity: Int!
+  maxOrderQuantity: Int
+  bulkPricing: [BulkPricingInput!]!
+}
+
+input UpdateProductInput {
+  name: String
+  description: String
+  category: String
+  subcategory: String
+  price: Float
+  currency: String
+  quantity: Int
+  unit: String
+  images: [String!]
+  location: String
+  region: String
+  district: String
+  tags: [String!]
+  specifications: Json
+  shippingOptions: [ShippingOptionInput!]
+  returnPolicy: ReturnPolicyInput
+  minOrderQuantity: Int
+  maxOrderQuantity: Int
+  bulkPricing: [BulkPricingInput!]
+}
+
+input OrderItemInput {
+  productId: String
+  name: String!
+  description: String
+  quantity: Int!
+  unitPrice: Float!
+  specifications: Json
+  customizations: Json
+}
+
+input AddressInput {
+  street: String!
+  city: String!
+  region: String!
+  district: String!
+  postalCode: String
+  country: String!
+  isDefault: Boolean
+}
+
+input ShippingOptionInput {
+  method: String!
+  cost: Float!
+  estimatedDays: Int!
+  description: String!
+}
+
+input ReturnPolicyInput {
+  days: Int!
+  conditions: String!
+  process: String!
+  restockingFee: Float!
+}
+
+input BulkPricingInput {
+  minQuantity: Int!
+  maxQuantity: Int!
+  unitPrice: Float!
+  discount: Float!
+}
+
+input CreateReviewInput {
+  productId: String!
+  orderId: String!
+  rating: Int!
+  title: String
+  comment: String
+  images: [String!]
+}
+
+input UpdateReviewInput {
+  rating: Int
+  title: String
+  comment: String
+  images: [String!]
+}
+
+input CreatePaymentInput {
+  orderId: String!
+  amount: Float!
+  currency: String!
+  method: String!
+  gateway: String!
+  metadata: Json
+}
+
+input RefundPaymentInput {
+  amount: Float!
+  reason: String!
+  refundMethod: String!
+}

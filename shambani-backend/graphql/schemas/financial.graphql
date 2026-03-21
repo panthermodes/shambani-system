@@ -1,0 +1,459 @@
+# Financial Management GraphQL Schema
+type FinancialRecord {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  transactionType: String! # INCOME, EXPENSE, INVESTMENT, LOAN_PAYMENT
+  category: String! # FEEDS, MEDICINE, EQUIPMENT, LABOR, EGGS_SALES, CHICKS_SALES, etc.
+  amount: Float!
+  currency: String! # TZS, USD, etc.
+  description: String
+  transactionDate: DateTime!
+  recordedAt: DateTime!
+  quantity: Float
+  unitPrice: Float
+  totalAmount: Float
+  paymentMethod: String # CASH, BANK_TRANSFER, MOBILE_MONEY, CREDIT
+  referenceNumber: String
+  invoiceNumber: String
+  receiptNumber: String
+  supplier: String
+  customer: String
+  metadata: Json
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LoanRequest {
+  id: String!
+  userId: String!
+  loanType: String! # FEEDING_FINANCING, EQUIPMENT_FINANCING, EXPANSION_FINANCING
+  amount: Float!
+  currency: String!
+  purpose: String!
+  repaymentPeriod: Int! # in months
+  interestRate: Float!
+  monthlyPayment: Float!
+  totalRepayment: Float!
+  status: String! # PENDING, APPROVED, REJECTED, DISBURSED, REPAID
+  appliedDate: DateTime!
+  approvedDate: DateTime
+  disbursedDate: DateTime
+  repaymentStartDate: DateTime
+  endDate: DateTime
+  guarantorName: String
+  guarantorPhone: String
+  guarantorAddress: String
+  collateral: String
+  documents: [String!]!
+  approvedBy: String
+  rejectionReason: String
+  notes: String
+  metadata: Json
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ProfitLossStatement {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  period: String! # DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  startDate: DateTime!
+  endDate: DateTime!
+  totalIncome: Float!
+  totalExpenses: Float!
+  grossProfit: Float!
+  netProfit: Float!
+  profitMargin: Float!
+  expenseBreakdown: [ExpenseBreakdown!]!
+  incomeBreakdown: [IncomeBreakdown!]!
+  comparisonWithPreviousPeriod: PeriodComparison!
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type FinancialSummary {
+  totalIncome: Float!
+  totalExpenses: Float!
+  netProfit: Float!
+  profitMargin: Float!
+  totalAssets: Float!
+  totalLiabilities: Float!
+  equity: Float!
+  cashFlow: Float!
+  monthlyTrend: [MonthlyFinancialTrend!]!
+  topExpenseCategories: [CategorySummary!]!
+  topIncomeCategories: [CategorySummary!]!
+  recentTransactions: [FinancialRecord!]!
+  pendingLoanRequests: [LoanRequest!]!
+  activeLoans: [LoanRequest!]!
+}
+
+type ExpenseBreakdown {
+  category: String!
+  amount: Float!
+  percentage: Float!
+  transactionCount: Int!
+}
+
+type IncomeBreakdown {
+  category: String!
+  amount: Float!
+  percentage: Float!
+  transactionCount: Int!
+}
+
+type PeriodComparison {
+  previousPeriodIncome: Float!
+  previousPeriodExpenses: Float!
+  previousPeriodProfit: Float!
+  incomeChange: Float!
+  incomeChangePercentage: Float!
+  expenseChange: Float!
+  expenseChangePercentage: Float!
+  profitChange: Float!
+  profitChangePercentage: Float!
+}
+
+type MonthlyFinancialTrend {
+  month: String!
+  year: Int!
+  income: Float!
+  expenses: Float!
+  profit: Float!
+  profitMargin: Float!
+}
+
+type CategorySummary {
+  category: String!
+  amount: Float!
+  percentage: Float!
+  trend: String! # UP, DOWN, STABLE
+}
+
+extend type Query {
+  # Get financial records
+  getFinancialRecords(
+    farmId: String
+    houseId: String
+    transactionType: String
+    category: String
+    startDate: DateTime
+    endDate: DateTime
+  ): [FinancialRecord!]!
+  
+  # Get single financial record
+  getFinancialRecord(id: String!): FinancialRecord
+  
+  # Get financial summary
+  getFinancialSummary(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): FinancialSummary!
+  
+  # Get profit/loss statement
+  getProfitLossStatement(
+    farmId: String
+    houseId: String
+    period: String!
+    startDate: DateTime
+    endDate: DateTime
+  ): ProfitLossStatement!
+  
+  # Get loan requests
+  getLoanRequests(status: String): [LoanRequest!]!
+  
+  # Get single loan request
+  getLoanRequest(id: String!): LoanRequest
+  
+  # Get active loans
+  getActiveLoans: [LoanRequest!]!
+  
+  # Get financial statistics
+  getFinancialStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): FinancialStats!
+  
+  # Get admin financial statistics
+  getAdminFinancialStats(region: String, district: String): FinancialStats!
+  
+  # Get expense analysis
+  getExpenseAnalysis(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): ExpenseAnalysis!
+  
+  # Get income analysis
+  getIncomeAnalysis(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): IncomeAnalysis!
+  
+  # Get cash flow statement
+  getCashFlowStatement(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): CashFlowStatement!
+}
+
+extend type Mutation {
+  # Create financial record
+  createFinancialRecord(input: CreateFinancialRecordInput!): FinancialRecord!
+  
+  # Update financial record
+  updateFinancialRecord(id: String!, input: UpdateFinancialRecordInput!): FinancialRecord!
+  
+  # Delete financial record
+  deleteFinancialRecord(id: String!): Boolean!
+  
+  # Create loan request
+  createLoanRequest(input: CreateLoanRequestInput!): LoanRequest!
+  
+  # Update loan request
+  updateLoanRequest(id: String!, input: UpdateLoanRequestInput!): LoanRequest!
+  
+  # Delete loan request
+  deleteLoanRequest(id: String!): Boolean!
+  
+  # Approve loan request (admin only)
+  approveLoanRequest(id: String!, input: ApproveLoanRequestInput!): LoanRequest!
+  
+  # Reject loan request (admin only)
+  rejectLoanRequest(id: String!, rejectionReason: String!): LoanRequest!
+  
+  # Disburse loan (admin only)
+  disburseLoan(id: String!): LoanRequest!
+  
+  # Record loan payment
+  recordLoanPayment(loanId: String!, input: RecordLoanPaymentInput!): LoanRequest!
+  
+  # Generate financial report
+  generateFinancialReport(input: GenerateFinancialReportInput!): FinancialReport!
+}
+
+type FinancialStats {
+  totalTransactions: Int!
+  totalIncome: Float!
+  totalExpenses: Float!
+  netProfit: Float!
+  averageTransactionValue: Float!
+  mostProfitableCategory: String!
+  highestExpenseCategory: String!
+  profitGrowthRate: Float!
+  expenseGrowthRate: Float!
+  monthlyComparison: [MonthlyComparison!]!
+  categoryPerformance: [CategoryPerformance!]!
+}
+
+type ExpenseAnalysis {
+  totalExpenses: Float!
+  expenseByCategory: [ExpenseByCategory!]!
+  expenseTrend: [ExpenseTrend!]!
+  budgetComparison: [BudgetComparison!]!
+  costSavingOpportunities: [CostSavingOpportunity!]!
+}
+
+type IncomeAnalysis {
+  totalIncome: Float!
+  incomeByCategory: [IncomeByCategory!]!
+  incomeTrend: [IncomeTrend!]!
+  revenueGrowth: RevenueGrowth!
+  profitableSegments: [ProfitableSegment!]!
+}
+
+type CashFlowStatement {
+  openingBalance: Float!
+  cashInflows: Float!
+  cashOutflows: Float!
+  netCashFlow: Float!
+  closingBalance: Float!
+  operatingCashFlow: Float!
+  investingCashFlow: Float!
+  financingCashFlow: Float!
+  cashFlowTrend: [CashFlowTrend!]!
+}
+
+type FinancialReport {
+  id: String!
+  reportType: String!
+  period: String!
+  startDate: DateTime!
+  endDate: DateTime!
+  generatedAt: DateTime!
+  data: Json!
+  fileUrl: String
+  user: User!
+}
+
+type ExpenseByCategory {
+  category: String!
+  amount: Float!
+  percentage: Float!
+  transactionCount: Int!
+  averageAmount: Float!
+}
+
+type ExpenseTrend {
+  period: String!
+  amount: Float!
+  changePercentage: Float!
+}
+
+type BudgetComparison {
+  category: String!
+  budgeted: Float!
+  actual: Float!
+  variance: Float!
+  variancePercentage: Float!
+}
+
+type CostSavingOpportunity {
+  category: String!
+  potentialSavings: Float!
+  recommendation: String!
+  implementationCost: Float!
+}
+
+type IncomeByCategory {
+  category: String!
+  amount: Float!
+  percentage: Float!
+  transactionCount: Int!
+  averageAmount: Float!
+}
+
+type IncomeTrend {
+  period: String!
+  amount: Float!
+  changePercentage: Float!
+}
+
+type RevenueGrowth {
+  currentPeriod: Float!
+  previousPeriod: Float!
+  growthRate: Float!
+  yearToDate: Float!
+}
+
+type ProfitableSegment {
+  segment: String!
+  revenue: Float!
+  profit: Float!
+  profitMargin: Float!
+  growthRate: Float!
+}
+
+type CashFlowTrend {
+  period: String!
+  openingBalance: Float!
+  closingBalance: Float!
+  netFlow: Float!
+}
+
+type MonthlyComparison {
+  month: String!
+  income: Float!
+  expenses: Float!
+  profit: Float!
+  profitMargin: Float!
+}
+
+type CategoryPerformance {
+  category: String!
+  totalAmount: Float!
+  transactionCount: Int!
+  averageAmount: Float!
+  growthRate: Float!
+  profitability: Float!
+}
+
+input CreateFinancialRecordInput {
+  farmId: String
+  houseId: String
+  transactionType: String!
+  category: String!
+  amount: Float!
+  currency: String!
+  description: String
+  transactionDate: DateTime!
+  quantity: Float
+  unitPrice: Float
+  totalAmount: Float
+  paymentMethod: String
+  referenceNumber: String
+  invoiceNumber: String
+  receiptNumber: String
+  supplier: String
+  customer: String
+}
+
+input UpdateFinancialRecordInput {
+  farmId: String
+  houseId: String
+  transactionType: String
+  category: String
+  amount: Float
+  currency: String
+  description: String
+  transactionDate: DateTime
+  quantity: Float
+  unitPrice: Float
+  totalAmount: Float
+  paymentMethod: String
+  referenceNumber: String
+  invoiceNumber: String
+  receiptNumber: String
+  supplier: String
+  customer: String
+}
+
+input CreateLoanRequestInput {
+  loanType: String!
+  amount: Float!
+  currency: String!
+  purpose: String!
+  repaymentPeriod: Int!
+  interestRate: Float!
+  guarantorName: String
+  guarantorPhone: String
+  guarantorAddress: String
+  collateral: String
+  documents: [String!]!
+  notes: String
+}
+
+input UpdateLoanRequestInput {
+  loanType: String
+  amount: Float
+  currency: String
+  purpose: String
+  repaymentPeriod: Int
+  interestRate: Float
+  guarantorName: String
+  guarantorPhone: String
+  guarantorAddress: String
+  collateral: String
+  documents: [String!]
+  notes: String
+}
+
+input ApproveLoanRequestInput {
+  approvedAmount: Float!
+  interestRate: Float!
+  repaymentPeriod: Int!
+  monthlyPayment: Float!
+  totalRepayment: Float!
+  repaymentStartDate: DateTime!
+  notes: String
+}
+
+input RecordLoanPaymentInput {
+  paymentAmount: Float!
+  paymentDate: DateTime!
+  paymentMethod: String!
+  referenceNumber: String
+  notes: String
+}
+
+input GenerateFinancialReportInput {
+  reportType: String!
+  period: String!
+  startDate: DateTime!
+  endDate: DateTime!
+  farmId: String
+  houseId: String
+  format: String! # PDF, EXCEL, CSV
+  includeCharts: Boolean!
+}

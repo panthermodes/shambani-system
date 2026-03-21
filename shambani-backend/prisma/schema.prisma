@@ -1,0 +1,339 @@
+generator client { 
+  provider = "prisma-client-js" 
+} 
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  password             String
+  firstName            String
+  lastName             String
+  phone                String?   @unique
+  role                 String
+  farmName             String?
+  businessName         String?
+  location             String?
+  region               String?
+  district             String?
+  
+  // Farmer-specific fields
+  farmerType           String?
+  farmerCategory       String?
+  registrationNumber  String?
+  taxId                String?
+  yearsOfExperience    Int?
+  farmSize             Float?
+  farmSizeUnit         String?
+  crops                String[]
+  livestock            String[]
+  farmingMethods       String[]
+  certifications       String[]
+  ward                 String?
+  village              String?
+  street               String?
+  houseNumber          String?
+  gpsCoordinates       String?
+  dateOfBirth          DateTime?
+  gender               String?
+  nationalId           String?
+  alternativePhone     String?
+  preferredLanguage    String?
+  marketingConsent     Boolean?
+  
+  // Existing fields
+  businessReg          String?
+  bankAccount          String?
+  memberSince          DateTime  @default(now())
+  isActive             Boolean   @default(true)
+  isVerified           Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Relationships
+  serviceRequests      ServiceRequest[]
+  assignedServiceRequests ServiceRequest[] @relation("ServiceRequestAssignment")
+  products             Product[]
+  farms                Farm[]
+  productionRecords    ProductionRecord[]
+  logistics            Logistics[] @relation("LogisticsProvider")
+  orders               Order[] @relation("OrderBuyer")
+
+  @@map("users")
+}
+
+model Order {
+  id          String    @id @default(cuid())
+  userId      String
+  orderNumber String    @unique
+  type        String    
+  status      String    @default("PENDING")
+  totalAmount Decimal?
+  description String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  buyer      User      @relation("OrderBuyer", fields: [userId], references: [id])
+  items      OrderItem[]
+  logistics  Logistics?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String?
+  name        String
+  description String?
+  quantity    Int
+  unitPrice   Decimal
+  totalPrice  Decimal
+
+  // Relationships
+  order   Order    @relation(fields: [orderId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model ServiceRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  serviceType String
+  title       String
+  description String
+  status      String    @default("PENDING")
+  priority    String    @default("MEDIUM")
+  assignedTo  String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  rating      Float?
+  feedback    String?
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedToUser User?     @relation("ServiceRequestAssignment", fields: [assignedTo], references: [id])
+
+  @@map("service_requests")
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  sellerId    String
+  name        String
+  description String?
+  category    String?
+  subcategory String?
+  price       Decimal
+  stock       Int       @default(0)
+  quantity    Int?      @default(0)  // Added for compatibility
+  isActive    Boolean   @default(true)  // Added for compatibility
+  images      Json?
+  tags        String[]
+  isVerified  Boolean   @default(false)
+  isFeatured  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  seller      User      @relation(fields: [sellerId], references: [id])
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notifications")
+}
+
+model ProductionRecord {
+  id            String    @id @default(cuid())
+  userId        String
+  recordType    String
+  date          DateTime
+  houseId       String?
+  farmId        String?
+  quantity      Float?
+  unit          String?
+  quality       String?
+  temperature   Float?
+  humidity      Float?
+  recordedDate  DateTime  @default(now())
+  notes         String?
+  data          Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  farm          Farm?     @relation(fields: [farmId], references: [id])
+  house         House?    @relation(fields: [houseId], references: [id])
+
+  @@map("production_records")
+}
+
+model Farm {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  location    String?
+  size        Float?
+  sizeUnit    String?   @default("hectares")
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productionRecords ProductionRecord[]
+  houses      House[]
+
+  @@map("farms")
+}
+
+model House {
+  id          String    @id @default(cuid())
+  farmId      String
+  name        String
+  type        String?   // brooder, grower, layer, etc.
+  capacity    Int?
+  size        Float?
+  sizeUnit    String?   @default("sq_meters")
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  farm        Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  productionRecords ProductionRecord[]
+
+  @@map("houses")
+}
+
+model FeedingRecord {
+  id            String    @id @default(cuid())
+  userId        String
+  date          DateTime
+  houseId       String?
+  feedType      String
+  feedQuantity  Float
+  feedUnit      String
+  costPerUnit   Decimal
+  totalCost     Decimal
+  supplier      String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("feeding_records")
+}
+
+model HealthRecord {
+  id            String    @id @default(cuid())
+  userId        String
+  date          DateTime
+  houseId       String?
+  recordType    String
+  description   String?
+  symptoms      String?
+  diagnosis     String?
+  treatment     String?
+  veterinarian  String?
+  cost          Decimal?
+  notes         String?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("health_records")
+}
+
+model FinancialRecord {
+  id            String    @id @default(cuid())
+  userId        String
+  date          DateTime
+  type          String
+  category      String
+  description   String?
+  amount        Decimal
+  paymentMethod String?
+  reference     String?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("financial_records")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String?
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reviews")
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  userId    String
+  orderId   String?
+  amount    Decimal
+  method    String
+  status    String
+  reference String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payments")
+}
+
+model Logistics {
+  id                String    @id @default(cuid())
+  orderId           String    @unique
+  providerId        String
+  deliveryStatus    String    @default("PENDING")
+  trackingNumber    String?   @unique
+  estimatedDelivery DateTime?
+  actualDelivery    DateTime?
+  pickupAddress     String?
+  deliveryAddress   String?
+  deliveryCost      Decimal?
+  notes             String?
+  metadata          Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relationships
+  order    Order    @relation(fields: [orderId], references: [id])
+  provider User     @relation("LogisticsProvider", fields: [providerId], references: [id])
+
+  @@map("logistics")
+}

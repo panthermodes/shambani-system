@@ -1,0 +1,362 @@
+# Health Management GraphQL Schema
+type HealthRecord {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  chickenType: String
+  chickenCount: Int
+  diseaseType: String
+  symptoms: String
+  diagnosis: String
+  treatment: String
+  medication: String
+  dosage: String
+  veterinarianName: String
+  healthDate: DateTime!
+  recordedAt: DateTime!
+  recoveryDate: DateTime
+  status: String! # SICK, RECOVERING, RECOVERED, DIED
+  severity: String! # LOW, MEDIUM, HIGH, CRITICAL
+  cost: Float
+  notes: String
+  metadata: Json
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type VaccinationRecord {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  vaccineName: String!
+  vaccineType: String!
+  batchNumber: String
+  manufacturer: String
+  expiryDate: DateTime
+  administrationDate: DateTime!
+  nextDueDate: DateTime
+  chickenType: String
+  chickenCount: Int
+  dosage: String
+  route: String
+  veterinarianName: String
+  cost: Float
+  notes: String
+  status: String! # SCHEDULED, ADMINISTERED, OVERDUE
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type DiseaseOutbreak {
+  id: String!
+  region: String!
+  district: String!
+  ward: String
+  diseaseName: String!
+  severity: String!
+  affectedFarms: Int!
+  totalAffectedChickens: Int!
+  totalDeaths: Int!
+  reportedDate: DateTime!
+  resolvedDate: DateTime
+  status: String! # ACTIVE, CONTAINED, RESOLVED
+  description: String
+  preventiveMeasures: String
+  treatmentRecommendations: String
+  reportedBy: String!
+  metadata: Json
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type HealthAppointment {
+  id: String!
+  userId: String!
+  veterinarianId: String!
+  farmId: String
+  houseId: String
+  appointmentDate: DateTime!
+  appointmentTime: String!
+  purpose: String!
+  chickenType: String
+  chickenCount: Int
+  symptoms: String
+  urgency: String! # LOW, MEDIUM, HIGH, EMERGENCY
+  status: String! # SCHEDULED, CONFIRMED, COMPLETED, CANCELLED
+  notes: String
+  cost: Float
+  veterinarian: User!
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type HealthStats {
+  totalHealthRecords: Int!
+  activeCases: Int!
+  recoveredCases: Int!
+  totalDeaths: Int!
+  mortalityRate: Float!
+  recoveryRate: Float!
+  commonDiseases: [DiseaseStats!]!
+  vaccinationCoverage: Float!
+  upcomingVaccinations: Int!
+  overdueVaccinations: Int!
+  monthlyHealthTrend: [MonthlyHealthStats!]!
+  regionalOutbreaks: [DiseaseOutbreak!]!
+}
+
+type DiseaseStats {
+  diseaseName: String!
+  caseCount: Int!
+  deathCount: Int!
+  recoveryCount: Int!
+  mortalityRate: Float!
+}
+
+type MonthlyHealthStats {
+  month: String!
+  year: Int!
+  totalCases: Int!
+  totalDeaths: Int!
+  totalRecoveries: Int!
+  vaccinationCount: Int!
+}
+
+extend type Query {
+  # Get health records
+  getHealthRecords(farmId: String, houseId: String, status: String, startDate: DateTime, endDate: DateTime): [HealthRecord!]!
+  
+  # Get single health record
+  getHealthRecord(id: String!): HealthRecord
+  
+  # Get vaccination records
+  getVaccinationRecords(farmId: String, houseId: String, status: String, upcoming: Boolean): [VaccinationRecord!]!
+  
+  # Get upcoming vaccinations
+  getUpcomingVaccinations: [VaccinationRecord!]!
+  
+  # Get overdue vaccinations
+  getOverdueVaccinations: [VaccinationRecord!]!
+  
+  # Get disease outbreaks
+  getDiseaseOutbreaks(region: String, district: String, status: String): [DiseaseOutbreak!]!
+  
+  # Get health appointments
+  getHealthAppointments(status: String, startDate: DateTime, endDate: DateTime): [HealthAppointment!]!
+  
+  # Get upcoming appointments
+  getUpcomingAppointments: [HealthAppointment!]!
+  
+  # Get health statistics
+  getHealthStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): HealthStats!
+  
+  # Get admin health statistics
+  getAdminHealthStats(region: String, district: String): HealthStats!
+  
+  # Get vaccination schedule
+  getVaccinationSchedule(chickenType: String, ageInWeeks: Int): [VaccinationRecommendation!]!
+}
+
+extend type Mutation {
+  # Create health record
+  createHealthRecord(input: CreateHealthRecordInput!): HealthRecord!
+  
+  # Update health record
+  updateHealthRecord(id: String!, input: UpdateHealthRecordInput!): HealthRecord!
+  
+  # Delete health record
+  deleteHealthRecord(id: String!): Boolean!
+  
+  # Create vaccination record
+  createVaccinationRecord(input: CreateVaccinationRecordInput!): VaccinationRecord!
+  
+  # Update vaccination record
+  updateVaccinationRecord(id: String!, input: UpdateVaccinationRecordInput!): VaccinationRecord!
+  
+  # Delete vaccination record
+  deleteVaccinationRecord(id: String!): Boolean!
+  
+  # Report disease outbreak
+  reportDiseaseOutbreak(input: ReportDiseaseOutbreakInput!): DiseaseOutbreak!
+  
+  # Update disease outbreak
+  updateDiseaseOutbreak(id: String!, input: UpdateDiseaseOutbreakInput!): DiseaseOutbreak!
+  
+  # Schedule health appointment
+  scheduleHealthAppointment(input: ScheduleHealthAppointmentInput!): HealthAppointment!
+  
+  # Update health appointment
+  updateHealthAppointment(id: String!, input: UpdateHealthAppointmentInput!): HealthAppointment!
+  
+  # Cancel health appointment
+  cancelHealthAppointment(id: String!): Boolean!
+  
+  # Create vaccination program (admin function)
+  createVaccinationProgram(input: CreateVaccinationProgramInput!): Boolean!
+}
+
+type VaccinationRecommendation {
+  vaccineName: String!
+  vaccineType: String!
+  recommendedAge: String!
+  dosage: String!
+  route: String!
+  boosterInterval: String!
+  precautions: String!
+  estimatedCost: Float!
+}
+
+input CreateHealthRecordInput {
+  farmId: String
+  houseId: String
+  chickenType: String
+  chickenCount: Int
+  diseaseType: String
+  symptoms: String
+  diagnosis: String
+  treatment: String
+  medication: String
+  dosage: String
+  veterinarianName: String
+  healthDate: DateTime!
+  recoveryDate: DateTime
+  status: String
+  severity: String
+  cost: Float
+  notes: String
+}
+
+input UpdateHealthRecordInput {
+  farmId: String
+  houseId: String
+  chickenType: String
+  chickenCount: Int
+  diseaseType: String
+  symptoms: String
+  diagnosis: String
+  treatment: String
+  medication: String
+  dosage: String
+  veterinarianName: String
+  healthDate: DateTime
+  recoveryDate: DateTime
+  status: String
+  severity: String
+  cost: Float
+  notes: String
+}
+
+input CreateVaccinationRecordInput {
+  farmId: String
+  houseId: String
+  vaccineName: String!
+  vaccineType: String!
+  batchNumber: String
+  manufacturer: String
+  expiryDate: DateTime
+  administrationDate: DateTime!
+  nextDueDate: DateTime
+  chickenType: String
+  chickenCount: Int
+  dosage: String
+  route: String
+  veterinarianName: String
+  cost: Float
+  notes: String
+}
+
+input UpdateVaccinationRecordInput {
+  farmId: String
+  houseId: String
+  vaccineName: String
+  vaccineType: String
+  batchNumber: String
+  manufacturer: String
+  expiryDate: DateTime
+  administrationDate: DateTime
+  nextDueDate: DateTime
+  chickenType: String
+  chickenCount: Int
+  dosage: String
+  route: String
+  veterinarianName: String
+  cost: Float
+  notes: String
+  status: String
+}
+
+input ReportDiseaseOutbreakInput {
+  region: String!
+  district: String!
+  ward: String
+  diseaseName: String!
+  severity: String!
+  affectedFarms: Int!
+  totalAffectedChickens: Int!
+  totalDeaths: Int!
+  description: String
+  preventiveMeasures: String
+  treatmentRecommendations: String
+}
+
+input UpdateDiseaseOutbreakInput {
+  severity: String
+  affectedFarms: Int
+  totalAffectedChickens: Int
+  totalDeaths: Int
+  resolvedDate: DateTime
+  status: String
+  description: String
+  preventiveMeasures: String
+  treatmentRecommendations: String
+}
+
+input ScheduleHealthAppointmentInput {
+  veterinarianId: String!
+  farmId: String
+  houseId: String
+  appointmentDate: DateTime!
+  appointmentTime: String!
+  purpose: String!
+  chickenType: String
+  chickenCount: Int
+  symptoms: String
+  urgency: String!
+  notes: String
+}
+
+input UpdateHealthAppointmentInput {
+  appointmentDate: DateTime
+  appointmentTime: String
+  purpose: String
+  chickenType: String
+  chickenCount: Int
+  symptoms: String
+  urgency: String
+  status: String
+  notes: String
+  cost: Float
+}
+
+input CreateVaccinationProgramInput {
+  chickenType: String!
+  vaccinationSchedule: [VaccinationScheduleItem!]!
+  targetRegions: [String!]!
+  effectiveDate: DateTime!
+  description: String!
+}
+
+input VaccinationScheduleItem {
+  vaccineName: String!
+  vaccineType: String!
+  recommendedAge: String!
+  dosage: String!
+  route: String!
+  boosterInterval: String!
+  precautions: String!
+}

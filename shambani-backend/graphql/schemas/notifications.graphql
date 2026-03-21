@@ -1,0 +1,344 @@
+# Notifications Management GraphQL Schema
+type Notification {
+  id: String!
+  userId: String
+  title: String!
+  message: String!
+  type: String! # INFO, SUCCESS, WARNING, ERROR, ALERT
+  priority: String! # LOW, MEDIUM, HIGH, URGENT
+  isRead: Boolean!
+  readAt: DateTime
+  actionUrl: String
+  actionText: String
+  metadata: Json
+  expiresAt: DateTime
+  category: String! # SYSTEM, SERVICE, FINANCIAL, HEALTH, PRODUCTION, MARKETPLACE
+  source: String! # ADMIN, EXTENSION_OFFICER, SYSTEM, AUTOMATED
+  targetRole: String
+  batchId: String
+  sentVia: [String!]! # IN_APP, EMAIL, SMS, PUSH
+  deliveryStatus: [DeliveryStatus!]!
+  user: User
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type DeliveryStatus {
+  method: String!
+  status: String! # PENDING, SENT, DELIVERED, FAILED
+  sentAt: DateTime
+  deliveredAt: DateTime
+  failureReason: String
+  retryCount: Int!
+}
+
+type NotificationTemplate {
+  id: String!
+  name: String!
+  title: String!
+  message: String!
+  type: String!
+  category: String!
+  variables: [String!]!
+  isActive: Boolean!
+  languages: [NotificationLanguage!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type NotificationLanguage {
+  language: String!
+  title: String!
+  message: String!
+  actionText: String
+}
+
+type NotificationStats {
+  totalNotifications: Int!
+  unreadNotifications: Int!
+  readNotifications: Int!
+  notificationsByType: [NotificationTypeStats!]!
+  notificationsByCategory: [NotificationCategoryStats!]!
+  notificationsByPriority: [NotificationPriorityStats!]!
+  deliveryStats: DeliveryStats!
+  monthlyTrend: [MonthlyNotificationStats!]!
+  recentNotifications: [Notification!]!
+}
+
+type NotificationTypeStats {
+  type: String!
+  count: Int!
+  percentage: Float!
+  readRate: Float!
+}
+
+type NotificationCategoryStats {
+  category: String!
+  count: Int!
+  percentage: Float!
+  readRate: Float!
+}
+
+type NotificationPriorityStats {
+  priority: String!
+  count: Int!
+  percentage: Float!
+  readRate: Float!
+  averageReadTime: Float! # in minutes
+}
+
+type DeliveryStats {
+  totalSent: Int!
+  totalDelivered: Int!
+  totalFailed: Int!
+  deliveryRate: Float!
+  deliveryByMethod: [DeliveryByMethod!]!
+}
+
+type DeliveryByMethod {
+  method: String!
+  sent: Int!
+  delivered: Int!
+  failed: Int!
+  deliveryRate: Float!
+}
+
+type MonthlyNotificationStats {
+  month: String!
+  year: Int!
+  totalSent: Int!
+  totalRead: Int!
+  readRate: Float!
+  byType: [MonthlyTypeStats!]!
+}
+
+type MonthlyTypeStats {
+  type: String!
+  count: Int!
+  readRate: Float!
+}
+
+extend type Query {
+  # Get notifications for current user
+  getNotifications(
+    type: String
+    category: String
+    priority: String
+    isRead: Boolean
+    limit: Int
+    offset: Int
+  ): [Notification!]!
+  
+  # Get single notification
+  getNotification(id: String!): Notification
+  
+  # Get unread notifications count
+  getUnreadNotificationsCount: Int!
+  
+  # Get all notifications (admin)
+  getAllNotifications(
+    userId: String
+    type: String
+    category: String
+    priority: String
+    startDate: DateTime
+    endDate: DateTime
+    limit: Int
+    offset: Int
+  ): [Notification!]!
+  
+  # Get notification statistics
+  getNotificationStats(userId: String, startDate: DateTime, endDate: DateTime): NotificationStats!
+  
+  # Get admin notification statistics
+  getAdminNotificationStats(region: String, district: String, startDate: DateTime, endDate: DateTime): NotificationStats!
+  
+  # Get notification templates (admin)
+  getNotificationTemplates(isActive: Boolean): [NotificationTemplate!]!
+  
+  # Get notification template (admin)
+  getNotificationTemplate(id: String!): NotificationTemplate
+  
+  # Get notification delivery report (admin)
+  getNotificationDeliveryReport(batchId: String!): DeliveryReport!
+}
+
+extend type Mutation {
+  # Create notification
+  createNotification(input: CreateNotificationInput!): Notification!
+  
+  # Mark notification as read
+  markNotificationAsRead(notificationId: String!): Notification!
+  
+  # Mark all notifications as read
+  markAllNotificationsAsRead: Boolean!
+  
+  # Delete notification
+  deleteNotification(notificationId: String!): Boolean!
+  
+  # Send system notification (admin)
+  sendSystemNotification(input: SendSystemNotificationInput!): [Notification!]!
+  
+  # Send notification to role (admin)
+  sendNotificationToRole(role: String!, input: SendNotificationToRoleInput!): [Notification!]!
+  
+  # Send broadcast notification (admin)
+  sendBroadcastNotification(input: SendBroadcastNotificationInput!): [Notification!]!
+  
+  # Send targeted notifications (admin)
+  sendTargetedNotifications(input: SendTargetedNotificationsInput!): [Notification!]!
+  
+  # Create notification template (admin)
+  createNotificationTemplate(input: CreateNotificationTemplateInput!): NotificationTemplate!
+  
+  # Update notification template (admin)
+  updateNotificationTemplate(id: String!, input: UpdateNotificationTemplateInput!): NotificationTemplate!
+  
+  # Delete notification template (admin)
+  deleteNotificationTemplate(id: String!): Boolean!
+  
+  # Resend failed notifications (admin)
+  resendFailedNotifications(notificationId: String!): Boolean!
+}
+
+type DeliveryReport {
+  batchId: String!
+  totalRecipients: Int!
+  totalSent: Int!
+  totalDelivered: Int!
+  totalFailed: Int!
+  deliveryRate: Float!
+  deliveryByMethod: [DeliveryByMethod!]!
+  deliveryTimeline: [DeliveryTimeline!]!
+  failures: [DeliveryFailure!]!
+}
+
+type DeliveryTimeline {
+  timestamp: DateTime!
+  method: String!
+  status: String!
+  count: Int!
+}
+
+type DeliveryFailure {
+  userId: String!
+  method: String!
+  failureReason: String!
+  retryCount: Int!
+  lastAttempt: DateTime!
+}
+
+input CreateNotificationInput {
+  userId: String
+  title: String!
+  message: String!
+  type: String!
+  priority: String!
+  actionUrl: String
+  actionText: String
+  metadata: Json
+  expiresAt: DateTime
+  category: String!
+  source: String!
+  targetRole: String
+  sentVia: [String!]!
+}
+
+input SendSystemNotificationInput {
+  title: String!
+  message: String!
+  type: String!
+  priority: String!
+  actionUrl: String
+  actionText: String
+  metadata: Json
+  expiresAt: DateTime
+  category: String!
+  sentVia: [String!]!
+  targetUsers: [String!]!
+}
+
+input SendNotificationToRoleInput {
+  title: String!
+  message: String!
+  type: String!
+  priority: String!
+  actionUrl: String
+  actionText: String
+  metadata: Json
+  expiresAt: DateTime
+  category: String!
+  sentVia: [String!]!
+  regions: [String!]
+  districts: [String!]
+}
+
+input SendBroadcastNotificationInput {
+  title: String!
+  message: String!
+  type: String!
+  priority: String!
+  actionUrl: String
+  actionText: String
+  metadata: Json
+  expiresAt: DateTime
+  category: String!
+  sentVia: [String!]!
+  minAge: Int
+  maxAge: Int
+  gender: String
+  activityStatus: String
+}
+
+input SendTargetedNotificationsInput {
+  title: String!
+  message: String!
+  type: String!
+  priority: String!
+  actionUrl: String
+  actionText: String
+  metadata: Json
+  expiresAt: DateTime
+  category: String!
+  sentVia: [String!]!
+  targetCriteria: TargetCriteria!
+}
+
+input TargetCriteria {
+  roles: [String!]
+  regions: [String!]
+  districts: [String!]
+  farmTypes: [String!]
+  productionLevels: [String!]
+  lastActiveAfter: DateTime
+  registrationDateAfter: DateTime
+  customFilters: Json
+}
+
+input CreateNotificationTemplateInput {
+  name: String!
+  title: String!
+  message: String!
+  type: String!
+  category: String!
+  variables: [String!]!
+  languages: [NotificationLanguageInput!]!
+}
+
+input NotificationLanguageInput {
+  language: String!
+  title: String!
+  message: String!
+  actionText: String
+}
+
+input UpdateNotificationTemplateInput {
+  name: String
+  title: String
+  message: String
+  type: String
+  category: String
+  variables: [String!]
+  languages: [NotificationLanguageInput!]
+  isActive: Boolean
+}

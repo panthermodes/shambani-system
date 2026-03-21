@@ -1,0 +1,104 @@
+# Auth GraphQL Schema
+type User {
+  id: String!
+  email: String!
+  firstName: String!
+  lastName: String!
+  phone: String
+  role: UserRole!
+  farmName: String
+  businessName: String
+  location: String
+  region: String
+  district: String
+  isActive: Boolean!
+  isVerified: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum UserRole {
+  FARMER
+  CASUAL_LABOURER
+  EXTENSION_OFFICER
+  LOGISTICS_PROVIDER
+  AGROVET_OWNER
+  MACHINERY_DEALER
+  BUYER_AGGREGATOR
+  SUPER_ADMIN
+}
+
+type AuthResponse {
+  success: Boolean!
+  message: String!
+  data: User
+  accessToken: String
+  refreshToken: String
+}
+
+type OtpResponse {
+  success: Boolean!
+  message: String!
+  otpCode: String
+  expiresAt: DateTime
+}
+
+input RegisterInput {
+  phone: String!
+  password: String!
+  names: NameInput
+  role: UserRole
+  farmName: String
+  businessName: String
+  location: String
+  region: String
+  district: String
+}
+
+input NameInput {
+  first: String
+  middle: String
+  last: String
+}
+
+input LoginInput {
+  identifier: String! # email, phone, or username
+  password: String!
+}
+
+input LoginPhoneInput {
+  phone: String!
+  password: String!
+}
+
+input RequestOtpInput {
+  phone: String!
+}
+
+input VerifyOtpInput {
+  phone: String!
+  otpCode: String!
+}
+
+input RefreshTokenInput {
+  refreshToken: String!
+}
+
+type Query {
+  # Get current authenticated user
+  me: User
+  
+  # Validate token
+  validateToken(token: String!): Boolean!
+}
+
+type Mutation {
+  # Authentication mutations
+  register(input: RegisterInput!): AuthResponse!
+  login(input: LoginInput!): AuthResponse!
+  loginWithPhone(input: LoginPhoneInput!): AuthResponse!
+  requestOtp(input: RequestOtpInput!): OtpResponse!
+  verifyOtp(input: VerifyOtpInput!): AuthResponse!
+  refreshToken(input: RefreshTokenInput!): AuthResponse!
+  logout: Boolean!
+}

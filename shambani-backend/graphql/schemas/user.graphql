@@ -1,0 +1,97 @@
+# User Management GraphQL Schema
+extend type Query {
+  # Get user profile
+  profile: User
+  
+  # Get users by role (admin only)
+  getUsersByRole(role: UserRole!): [User!]!
+  
+  # Get all users (admin only)
+  getAllUsers: [User!]!
+  
+  # Get user by ID
+  getUser(id: String!): User
+  
+  # Search users by name, phone, or email
+  searchUsers(query: String!): [User!]!
+  
+  # Get user statistics (admin only)
+  getUserStats: UserStats!
+  
+  # Get farmers statistics
+  getFarmersStats: FarmerStats!
+  
+  # Get extension officers statistics
+  getExtensionOfficersStats: ExtensionOfficerStats!
+}
+
+extend type Mutation {
+  # Update user profile
+  updateProfile(input: UpdateProfileInput!): User!
+  
+  # Update password
+  updatePassword(input: UpdatePasswordInput!): Boolean!
+  
+  # Deactivate user (admin only)
+  deactivateUser(userId: String!): Boolean!
+  
+  # Activate user (admin only)
+  activateUser(userId: String!): Boolean!
+  
+  # Verify user (admin only)
+  verifyUser(userId: String!): Boolean!
+  
+  # Update user role (admin only)
+  updateUserRole(userId: String!, role: UserRole!): User!
+  
+  # Transfer user to different location (admin only)
+  transferUser(userId: String!, location: String!, region: String!, district: String!): User!
+}
+
+type UserStats {
+  totalUsers: Int!
+  activeUsers: Int!
+  verifiedUsers: Int!
+  usersByRole: [UserRoleCount!]!
+  recentRegistrations: [User!]!
+}
+
+type UserRoleCount {
+  role: UserRole!
+  count: Int!
+}
+
+type FarmerStats {
+  totalFarmers: Int!
+  activeFarmers: Int!
+  totalChickens: Int!
+  totalHens: Int!
+  totalCocks: Int!
+  totalChicks: Int!
+  averageFarmSize: Float
+  regionsWithFarmers: [String!]!
+}
+
+type ExtensionOfficerStats {
+  totalOfficers: Int!
+  activeOfficers: Int!
+  totalFarmersAttended: Int!
+  averageServicesPerMonth: Float!
+  regionsCovered: [String!]!
+}
+
+input UpdateProfileInput {
+  firstName: String
+  lastName: String
+  phone: String
+  farmName: String
+  businessName: String
+  location: String
+  region: String
+  district: String
+}
+
+input UpdatePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+}

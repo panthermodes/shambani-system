@@ -1,0 +1,339 @@
+# Services Management GraphQL Schema
+type ServiceRequest {
+  id: String!
+  userId: String!
+  serviceType: String! # EXTENSION, LOGISTICS, CONSULTATION, TRAINING, VETERINARY
+  title: String!
+  description: String!
+  status: String! # PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED
+  priority: String! # LOW, MEDIUM, HIGH, URGENT
+  assignedTo: String
+  assignedOfficer: User
+  scheduledDate: DateTime
+  completedDate: DateTime
+  estimatedDuration: Int # in hours
+  actualDuration: Int # in hours
+  location: String!
+  region: String!
+  district: String!
+  farmId: String
+  houseId: String
+  chickenType: String
+  chickenCount: Int
+  urgency: String!
+  specialRequirements: String
+  expectedOutcome: String
+  actualOutcome: String
+  rating: Int # 1-5 stars
+  feedback: String
+  cost: Float
+  paymentStatus: String! # PENDING, PAID, OVERDUE
+  invoiceNumber: String
+  metadata: Json
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ServiceAssignment {
+  id: String!
+  serviceRequestId: String!
+  extensionOfficerId: String!
+  assignedBy: String!
+  assignedAt: DateTime!
+  status: String! # ASSIGNED, ACCEPTED, REJECTED, COMPLETED
+  notes: String
+  estimatedArrival: DateTime
+  actualArrival: DateTime
+  serviceRequest: ServiceRequest!
+  extensionOfficer: User!
+  assigner: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ServiceRating {
+  id: String!
+  serviceRequestId: String!
+  userId: String!
+  extensionOfficerId: String!
+  rating: Int! # 1-5 stars
+  professionalism: Int! # 1-5 stars
+  knowledge: Int! # 1-5 stars
+  communication: Int! # 1-5 stars
+  problemSolving: Int! # 1-5 stars
+  timeliness: Int! # 1-5 stars
+  overallSatisfaction: Int! # 1-5 stars
+  comments: String
+  wouldRecommend: Boolean!
+  suggestions: String
+  serviceRequest: ServiceRequest!
+  user: User!
+  extensionOfficer: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ServiceStats {
+  totalRequests: Int!
+  pendingRequests: Int!
+  assignedRequests: Int!
+  inProgressRequests: Int!
+  completedRequests: Int!
+  cancelledRequests: Int!
+  averageResponseTime: Float! # in hours
+  averageCompletionTime: Float! # in hours
+  averageRating: Float!
+  requestsByType: [ServiceTypeStats!]!
+  requestsByPriority: [PriorityStats!]!
+  requestsByRegion: [RegionServiceStats!]!
+  monthlyTrend: [MonthlyServiceStats!]!
+  topPerformers: [TopPerformer!]!
+}
+
+type ServiceTypeStats {
+  serviceType: String!
+  count: Int!
+  percentage: Float!
+  averageRating: Float!
+  averageCost: Float!
+}
+
+type PriorityStats {
+  priority: String!
+  count: Int!
+  percentage: Float!
+  averageResponseTime: Float!
+}
+
+type RegionServiceStats {
+  region: String!
+  district: String!
+  requestCount: Int!
+  completionRate: Float!
+  averageRating: Float!
+}
+
+type MonthlyServiceStats {
+  month: String!
+  year: Int!
+  totalRequests: Int!
+  completedRequests: Int!
+  completionRate: Float!
+  averageRating: Float!
+  totalRevenue: Float!
+}
+
+type TopPerformer {
+  extensionOfficerId: String!
+  name: String!
+  totalServices: Int!
+  averageRating: Float!
+  completionRate: Float!
+  revenue: Float!
+}
+
+extend type Query {
+  # Get service requests
+  getServiceRequests(
+    serviceType: String
+    status: String
+    priority: String
+    region: String
+    district: String
+    startDate: DateTime
+    endDate: DateTime
+  ): [ServiceRequest!]!
+  
+  # Get single service request
+  getServiceRequest(id: String!): ServiceRequest
+  
+  # Get assigned services (for extension officers)
+  getAssignedServices(status: String): [ServiceRequest!]!
+  
+  # Get service assignments
+  getServiceAssignments(serviceRequestId: String): [ServiceAssignment!]!
+  
+  # Get service ratings
+  getServiceRatings(extensionOfficerId: String): [ServiceRating!]!
+  
+  # Get service statistics
+  getServiceStats(region: String, district: String, startDate: DateTime, endDate: DateTime): ServiceStats!
+  
+  # Get admin service statistics
+  getAdminServiceStats(region: String, district: String): ServiceStats!
+  
+  # Get extension officer statistics
+  getExtensionOfficerStats(extensionOfficerId: String): ExtensionOfficerStats!
+  
+  # Get available extension officers
+  getAvailableExtensionOfficers(region: String, district: String): [User!]!
+  
+  # Get service history for a user
+  getServiceHistory(userId: String, serviceType: String): [ServiceRequest!]!
+  
+  # Get pending service requests (admin)
+  getPendingServiceRequests: [ServiceRequest!]!
+  
+  # Get service performance metrics
+  getServicePerformanceMetrics(startDate: DateTime, endDate: DateTime): ServicePerformanceMetrics!
+}
+
+extend type Mutation {
+  # Create service request
+  createServiceRequest(input: CreateServiceRequestInput!): ServiceRequest!
+  
+  # Update service request
+  updateServiceRequest(id: String!, input: UpdateServiceRequestInput!): ServiceRequest!
+  
+  # Delete service request
+  deleteServiceRequest(id: String!): Boolean!
+  
+  # Assign service request (admin only)
+  assignServiceRequest(serviceRequestId: String!, extensionOfficerId: String!, input: AssignServiceRequestInput!): ServiceAssignment!
+  
+  # Accept service assignment (extension officer)
+  acceptServiceAssignment(serviceRequestId: String!): ServiceRequest!
+  
+  # Reject service assignment (extension officer)
+  rejectServiceAssignment(serviceRequestId: String!, reason: String!): ServiceRequest!
+  
+  # Update service status
+  updateServiceStatus(serviceRequestId: String!, status: String!, notes: String): ServiceRequest!
+  
+  # Complete service request
+  completeServiceRequest(serviceRequestId: String!, input: CompleteServiceRequestInput!): ServiceRequest!
+  
+  # Rate service
+  rateService(serviceRequestId: String!, input: RateServiceInput!): ServiceRating!
+  
+  # Cancel service request
+  cancelServiceRequest(serviceRequestId: String!, reason: String!): ServiceRequest!
+  
+  # Reschedule service request
+  rescheduleServiceRequest(serviceRequestId: String!, newDate: DateTime!, reason: String!): ServiceRequest!
+}
+
+type ExtensionOfficerStats {
+  extensionOfficerId: String!
+  name: String!
+  totalServices: Int!
+  completedServices: Int!
+  pendingServices: Int!
+  averageRating: Float!
+  totalRevenue: Float!
+  specialization: [String!]!
+  serviceTypes: [String!]!
+  regionsCovered: [String!]!
+  availability: String!
+  responseRate: Float!
+  completionRate: Float!
+}
+
+type ServicePerformanceMetrics {
+  totalRequests: Int!
+  totalRevenue: Float!
+  averageResponseTime: Float!
+  averageCompletionTime: Float!
+  customerSatisfactionRate: Float!
+  serviceUtilizationRate: Float!
+  costEfficiency: Float!
+  qualityMetrics: QualityMetrics!
+  regionalPerformance: [RegionalPerformance!]!
+  timeBasedPerformance: [TimeBasedPerformance!]!
+}
+
+type QualityMetrics {
+  averageRating: Float!
+  ratingDistribution: [RatingDistribution!]!
+  customerRetentionRate: Float!
+  complaintResolutionRate: Float!
+  serviceQualityScore: Float!
+}
+
+type RatingDistribution {
+  rating: Int!
+  count: Int!
+  percentage: Float!
+}
+
+type RegionalPerformance {
+  region: String!
+  requestCount: Int!
+  completionRate: Float!
+  averageRating: Float!
+  revenue: Float!
+}
+
+type TimeBasedPerformance {
+  period: String!
+  requests: Int!
+  completions: Int!
+  revenue: Float!
+  averageRating: Float!
+}
+
+input CreateServiceRequestInput {
+  serviceType: String!
+  title: String!
+  description: String!
+  priority: String!
+  location: String!
+  region: String!
+  district: String!
+  farmId: String
+  houseId: String
+  chickenType: String
+  chickenCount: Int
+  urgency: String!
+  specialRequirements: String
+  expectedOutcome: String
+  scheduledDate: DateTime
+  estimatedDuration: Int
+}
+
+input UpdateServiceRequestInput {
+  title: String
+  description: String
+  priority: String
+  location: String
+  region: String
+  district: String
+  farmId: String
+  houseId: String
+  chickenType: String
+  chickenCount: Int
+  urgency: String
+  specialRequirements: String
+  expectedOutcome: String
+  scheduledDate: DateTime
+  estimatedDuration: Int
+}
+
+input AssignServiceRequestInput {
+  notes: String
+  estimatedArrival: DateTime
+}
+
+input CompleteServiceRequestInput {
+  actualDuration: Int!
+  actualOutcome: String!
+  cost: Float!
+  notes: String
+  recommendations: String!
+  followUpRequired: Boolean!
+  followUpDate: DateTime
+}
+
+input RateServiceInput {
+  rating: Int!
+  professionalism: Int!
+  knowledge: Int!
+  communication: Int!
+  problemSolving: Int!
+  timeliness: Int!
+  overallSatisfaction: Int!
+  comments: String
+  wouldRecommend: Boolean!
+  suggestions: String
+}

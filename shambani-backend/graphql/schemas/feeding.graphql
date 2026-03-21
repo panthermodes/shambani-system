@@ -1,0 +1,212 @@
+# Feeding Management GraphQL Schema
+type FeedingRecord {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  feedType: String!
+  feedQuantity: Float!
+  feedUnit: String!
+  costPerUnit: Float!
+  totalCost: Float!
+  feedingDate: DateTime!
+  recordedAt: DateTime!
+  notes: String
+  chickenCount: Int
+  chickenType: String
+  feedBrand: String
+  proteinContent: Float
+  metadata: Json
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type FeedingSchedule {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  title: String!
+  description: String
+  feedType: String!
+  feedingFrequency: String! # DAILY, WEEKLY, MONTHLY
+  feedQuantity: Float!
+  feedUnit: String!
+  startDate: DateTime!
+  endDate: DateTime
+  isActive: Boolean!
+  chickenCount: Int
+  chickenType: String
+  nextFeedingDate: DateTime
+  totalFeedings: Int
+  completedFeedings: Int
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type FeedingStats {
+  totalRecords: Int!
+  totalFeedQuantity: Float!
+  totalCost: Float!
+  averageCostPerFeeding: Float!
+  mostUsedFeedType: String!
+  feedingFrequency: [FeedTypeStats!]!
+  monthlyStats: [MonthlyFeedingStats!]!
+  costTrend: [CostTrendData!]!
+}
+
+type FeedTypeStats {
+  feedType: String!
+  totalQuantity: Float!
+  totalCost: Float!
+  usageCount: Int!
+}
+
+type MonthlyFeedingStats {
+  month: String!
+  year: Int!
+  totalQuantity: Float!
+  totalCost: Float!
+  recordCount: Int!
+}
+
+type CostTrendData {
+  date: String!
+  cost: Float!
+  quantity: Float!
+}
+
+extend type Query {
+  # Get feeding records for a user
+  getFeedingRecords(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): [FeedingRecord!]!
+  
+  # Get single feeding record
+  getFeedingRecord(id: String!): FeedingRecord
+  
+  # Get feeding schedules
+  getFeedingSchedules(farmId: String, houseId: String, isActive: Boolean): [FeedingSchedule!]!
+  
+  # Get feeding statistics
+  getFeedingStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): FeedingStats!
+  
+  # Get feeding statistics for admin
+  getAdminFeedingStats(region: String, district: String): FeedingStats!
+  
+  # Get upcoming feeding schedule
+  getUpcomingFeedingSchedule: [FeedingSchedule!]!
+  
+  # Get feeding recommendations
+  getFeedingRecommendations(chickenType: String, chickenCount: Int): [FeedingRecommendation!]!
+}
+
+extend type Mutation {
+  # Create feeding record
+  createFeedingRecord(input: CreateFeedingRecordInput!): FeedingRecord!
+  
+  # Update feeding record
+  updateFeedingRecord(id: String!, input: UpdateFeedingRecordInput!): FeedingRecord!
+  
+  # Delete feeding record
+  deleteFeedingRecord(id: String!): Boolean!
+  
+  # Create feeding schedule
+  createFeedingSchedule(input: CreateFeedingScheduleInput!): FeedingSchedule!
+  
+  # Update feeding schedule
+  updateFeedingSchedule(id: String!, input: UpdateFeedingScheduleInput!): FeedingSchedule!
+  
+  # Delete feeding schedule
+  deleteFeedingSchedule(id: String!): Boolean!
+  
+  # Mark feeding as completed
+  completeFeedingSchedule(scheduleId: String!): FeedingSchedule!
+  
+  # Get feeding program recommendations (admin function)
+  createFeedingProgram(input: CreateFeedingProgramInput!): Boolean!
+}
+
+type FeedingRecommendation {
+  chickenType: String!
+  chickenCount: Int!
+  feedType: String!
+  dailyQuantity: Float!
+  feedingFrequency: String!
+  estimatedMonthlyCost: Float!
+  proteinRequirement: Float!
+  notes: String!
+}
+
+input CreateFeedingRecordInput {
+  farmId: String
+  houseId: String
+  feedType: String!
+  feedQuantity: Float!
+  feedUnit: String!
+  costPerUnit: Float!
+  feedingDate: DateTime!
+  notes: String
+  chickenCount: Int
+  chickenType: String
+  feedBrand: String
+  proteinContent: Float
+}
+
+input UpdateFeedingRecordInput {
+  farmId: String
+  houseId: String
+  feedType: String
+  feedQuantity: Float
+  feedUnit: String
+  costPerUnit: Float
+  feedingDate: DateTime
+  notes: String
+  chickenCount: Int
+  chickenType: String
+  feedBrand: String
+  proteinContent: Float
+}
+
+input CreateFeedingScheduleInput {
+  farmId: String
+  houseId: String
+  title: String!
+  description: String
+  feedType: String!
+  feedingFrequency: String!
+  feedQuantity: Float!
+  feedUnit: String!
+  startDate: DateTime!
+  endDate: DateTime
+  chickenCount: Int
+  chickenType: String
+}
+
+input UpdateFeedingScheduleInput {
+  farmId: String
+  houseId: String
+  title: String
+  description: String
+  feedType: String
+  feedingFrequency: String
+  feedQuantity: Float
+  feedUnit: String
+  startDate: DateTime
+  endDate: DateTime
+  isActive: Boolean
+  chickenCount: Int
+  chickenType: String
+}
+
+input CreateFeedingProgramInput {
+  chickenType: String!
+  ageGroup: String!
+  feedType: String!
+  dailyQuantity: Float!
+  feedingFrequency: String!
+  proteinRequirement: Float!
+  estimatedMonthlyCost: Float!
+  recommendations: String!
+  targetRegions: [String!]!
+}

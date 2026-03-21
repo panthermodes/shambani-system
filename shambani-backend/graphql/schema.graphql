@@ -1,0 +1,272 @@
+# Shambani Investment - Main GraphQL Schema
+# This is the main schema file that imports all module schemas
+
+# Import scalar types
+scalar DateTime
+scalar Json
+
+# Import base types from auth schema
+#import "./schemas/auth.graphql"
+#import "./schemas/user.graphql"
+
+# Import module schemas
+#import "./schemas/feeding.graphql"
+#import "./schemas/health.graphql"
+#import "./schemas/production.graphql"
+#import "./schemas/financial.graphql"
+#import "./schemas/services.graphql"
+#import "./schemas/notifications.graphql"
+#import "./schemas/orders.graphql"
+
+# Main Query type that combines all module queries
+type Query {
+  # Authentication queries
+  me: User
+  validateToken(token: String!): Boolean!
+  
+  # User management queries
+  profile: User
+  getUsersByRole(role: UserRole!): [User!]!
+  getAllUsers: [User!]!
+  getUser(id: String!): User
+  searchUsers(query: String!): [User!]!
+  getUserStats: UserStats!
+  getFarmersStats: FarmerStats!
+  getExtensionOfficersStats: ExtensionOfficerStats!
+  
+  # Feeding management queries
+  getFeedingRecords(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): [FeedingRecord!]!
+  getFeedingRecord(id: String!): FeedingRecord
+  getFeedingSchedules(farmId: String, houseId: String, isActive: Boolean): [FeedingSchedule!]!
+  getFeedingStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): FeedingStats!
+  getAdminFeedingStats(region: String, district: String): FeedingStats!
+  getUpcomingFeedingSchedule: [FeedingSchedule!]!
+  getFeedingRecommendations(chickenType: String, chickenCount: Int): [FeedingRecommendation!]!
+  
+  # Health management queries
+  getHealthRecords(farmId: String, houseId: String, status: String, startDate: DateTime, endDate: DateTime): [HealthRecord!]!
+  getHealthRecord(id: String!): HealthRecord
+  getVaccinationRecords(farmId: String, houseId: String, status: String, upcoming: Boolean): [VaccinationRecord!]!
+  getUpcomingVaccinations: [VaccinationRecord!]!
+  getOverdueVaccinations: [VaccinationRecord!]!
+  getDiseaseOutbreaks(region: String, district: String, status: String): [DiseaseOutbreak!]!
+  getHealthAppointments(status: String, startDate: DateTime, endDate: DateTime): [HealthAppointment!]!
+  getUpcomingAppointments: [HealthAppointment!]!
+  getHealthStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): HealthStats!
+  getAdminHealthStats(region: String, district: String): HealthStats!
+  getVaccinationSchedule(chickenType: String, ageInWeeks: Int): [VaccinationRecommendation!]!
+  
+  # Production management queries
+  getProductionRecords(farmId: String, houseId: String, productionType: String, startDate: DateTime, endDate: DateTime): [ProductionRecord!]!
+  getProductionRecord(id: String!): ProductionRecord
+  getEggProduction(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): [EggProduction!]!
+  getChickHatching(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): [ChickHatching!]!
+  getMortalityRecords(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): [MortalityRecord!]!
+  getWeightRecords(farmId: String, houseId: String, chickenType: String, startDate: DateTime, endDate: DateTime): [WeightRecord!]!
+  getProductionStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): ProductionStats!
+  getAdminProductionStats(region: String, district: String): ProductionStats!
+  getEggProductionStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): EggProductionStats!
+  getChickHatchingStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): ChickHatchingStats!
+  getMortalityStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): MortalityStats!
+  getWeightGainStats(farmId: String, houseId: String, chickenType: String, startDate: DateTime, endDate: DateTime): WeightGainStats!
+  getProductionDashboard: ProductionDashboard!
+  
+  # Financial management queries
+  getFinancialRecords(farmId: String, houseId: String, transactionType: String, category: String, startDate: DateTime, endDate: DateTime): [FinancialRecord!]!
+  getFinancialRecord(id: String!): FinancialRecord
+  getFinancialSummary(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): FinancialSummary!
+  getProfitLossStatement(farmId: String, houseId: String, period: String!, startDate: DateTime, endDate: DateTime): ProfitLossStatement!
+  getLoanRequests(status: String): [LoanRequest!]!
+  getLoanRequest(id: String!): LoanRequest
+  getActiveLoans: [LoanRequest!]!
+  getFinancialStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): FinancialStats!
+  getAdminFinancialStats(region: String, district: String): FinancialStats!
+  getExpenseAnalysis(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): ExpenseAnalysis!
+  getIncomeAnalysis(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): IncomeAnalysis!
+  getCashFlowStatement(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): CashFlowStatement!
+  
+  # Services management queries
+  getServiceRequests(serviceType: String, status: String, priority: String, region: String, district: String, startDate: DateTime, endDate: DateTime): [ServiceRequest!]!
+  getServiceRequest(id: String!): ServiceRequest
+  getAssignedServices(status: String): [ServiceRequest!]!
+  getServiceAssignments(serviceRequestId: String): [ServiceAssignment!]!
+  getServiceRatings(extensionOfficerId: String): [ServiceRating!]!
+  getServiceStats(region: String, district: String, startDate: DateTime, endDate: DateTime): ServiceStats!
+  getAdminServiceStats(region: String, district: String): ServiceStats!
+  getExtensionOfficerStats(extensionOfficerId: String): ExtensionOfficerStats!
+  getAvailableExtensionOfficers(region: String, district: String): [User!]!
+  getServiceHistory(userId: String, serviceType: String): [ServiceRequest!]!
+  getPendingServiceRequests: [ServiceRequest!]!
+  getServicePerformanceMetrics(startDate: DateTime, endDate: DateTime): ServicePerformanceMetrics!
+  
+  # Notifications queries
+  getNotifications(type: String, category: String, priority: String, isRead: Boolean, limit: Int, offset: Int): [Notification!]!
+  getNotification(id: String!): Notification
+  getUnreadNotificationsCount: Int!
+  getAllNotifications(userId: String, type: String, category: String, priority: String, startDate: DateTime, endDate: DateTime, limit: Int, offset: Int): [Notification!]!
+  getNotificationStats(userId: String, startDate: DateTime, endDate: DateTime): NotificationStats!
+  getAdminNotificationStats(region: String, district: String, startDate: DateTime, endDate: DateTime): NotificationStats!
+  getNotificationTemplates(isActive: Boolean): [NotificationTemplate!]!
+  getNotificationTemplate(id: String!): NotificationTemplate
+  getNotificationDeliveryReport(batchId: String!): DeliveryReport!
+  
+  # Orders/Marketplace queries
+  getOrders(status: String, type: String, paymentStatus: String, startDate: DateTime, endDate: DateTime, limit: Int, offset: Int): [Order!]!
+  getOrder(id: String!): Order
+  getProducts(category: String, subcategory: String, region: String, district: String, priceMin: Float, priceMax: Float, inStock: Boolean, verified: Boolean, featured: Boolean, tags: [String!], search: String, limit: Int, offset: Int): [Product!]!
+  getProduct(id: String!): Product
+  getMyProducts(status: String, category: String, limit: Int, offset: Int): [Product!]!
+  getReviews(productId: String, userId: String, rating: Int): [Review!]!
+  getReview(id: String!): Review
+  getPayments(orderId: String, status: String, method: String, startDate: DateTime, endDate: DateTime): [Payment!]!
+  getPayment(id: String!): Payment
+  getOrderStats(region: String, district: String, startDate: DateTime, endDate: DateTime): OrderStats!
+  getAdminOrderStats(region: String, district: String, startDate: DateTime, endDate: DateTime): OrderStats!
+  getProductStats(productId: String, region: String, startDate: DateTime, endDate: DateTime): ProductStats!
+  searchProducts(query: String!, filters: ProductSearchFilters): ProductSearchResult!
+}
+
+# Main Mutation type that combines all module mutations
+type Mutation {
+  # Authentication mutations
+  register(input: RegisterInput!): AuthResponse!
+  login(input: LoginInput!): AuthResponse!
+  loginWithPhone(input: LoginPhoneInput!): AuthResponse!
+  requestOtp(input: RequestOtpInput!): OtpResponse!
+  verifyOtp(input: VerifyOtpInput!): AuthResponse!
+  refreshToken(input: RefreshTokenInput!): AuthResponse!
+  logout: Boolean!
+  
+  # User management mutations
+  updateProfile(input: UpdateProfileInput!): User!
+  updatePassword(input: UpdatePasswordInput!): Boolean!
+  deactivateUser(userId: String!): Boolean!
+  activateUser(userId: String!): Boolean!
+  verifyUser(userId: String!): Boolean!
+  updateUserRole(userId: String!, role: UserRole!): User!
+  transferUser(userId: String!, location: String!, region: String!, district: String!): User!
+  
+  # Feeding management mutations
+  createFeedingRecord(input: CreateFeedingRecordInput!): FeedingRecord!
+  updateFeedingRecord(id: String!, input: UpdateFeedingRecordInput!): FeedingRecord!
+  deleteFeedingRecord(id: String!): Boolean!
+  createFeedingSchedule(input: CreateFeedingScheduleInput!): FeedingSchedule!
+  updateFeedingSchedule(id: String!, input: UpdateFeedingScheduleInput!): FeedingSchedule!
+  deleteFeedingSchedule(id: String!): Boolean!
+  completeFeedingSchedule(scheduleId: String!): FeedingSchedule!
+  createFeedingProgram(input: CreateFeedingProgramInput!): Boolean!
+  
+  # Health management mutations
+  createHealthRecord(input: CreateHealthRecordInput!): HealthRecord!
+  updateHealthRecord(id: String!, input: UpdateHealthRecordInput!): HealthRecord!
+  deleteHealthRecord(id: String!): Boolean!
+  createVaccinationRecord(input: CreateVaccinationRecordInput!): VaccinationRecord!
+  updateVaccinationRecord(id: String!, input: UpdateVaccinationRecordInput!): VaccinationRecord!
+  deleteVaccinationRecord(id: String!): Boolean!
+  reportDiseaseOutbreak(input: ReportDiseaseOutbreakInput!): DiseaseOutbreak!
+  updateDiseaseOutbreak(id: String!, input: UpdateDiseaseOutbreakInput!): DiseaseOutbreak!
+  scheduleHealthAppointment(input: ScheduleHealthAppointmentInput!): HealthAppointment!
+  updateHealthAppointment(id: String!, input: UpdateHealthAppointmentInput!): HealthAppointment!
+  cancelHealthAppointment(id: String!): Boolean!
+  createVaccinationProgram(input: CreateVaccinationProgramInput!): Boolean!
+  
+  # Production management mutations
+  createProductionRecord(input: CreateProductionRecordInput!): ProductionRecord!
+  updateProductionRecord(id: String!, input: UpdateProductionRecordInput!): ProductionRecord!
+  deleteProductionRecord(id: String!): Boolean!
+  createEggProduction(input: CreateEggProductionInput!): EggProduction!
+  updateEggProduction(id: String!, input: UpdateEggProductionInput!): EggProduction!
+  deleteEggProduction(id: String!): Boolean!
+  createChickHatching(input: CreateChickHatchingInput!): ChickHatching!
+  updateChickHatching(id: String!, input: UpdateChickHatchingInput!): ChickHatching!
+  deleteChickHatching(id: String!): Boolean!
+  createMortalityRecord(input: CreateMortalityRecordInput!): MortalityRecord!
+  updateMortalityRecord(id: String!, input: UpdateMortalityRecordInput!): MortalityRecord!
+  deleteMortalityRecord(id: String!): Boolean!
+  createWeightRecord(input: CreateWeightRecordInput!): WeightRecord!
+  updateWeightRecord(id: String!, input: UpdateWeightRecordInput!): WeightRecord!
+  deleteWeightRecord(id: String!): Boolean!
+  
+  # Financial management mutations
+  createFinancialRecord(input: CreateFinancialRecordInput!): FinancialRecord!
+  updateFinancialRecord(id: String!, input: UpdateFinancialRecordInput!): FinancialRecord!
+  deleteFinancialRecord(id: String!): Boolean!
+  createLoanRequest(input: CreateLoanRequestInput!): LoanRequest!
+  updateLoanRequest(id: String!, input: UpdateLoanRequestInput!): LoanRequest!
+  deleteLoanRequest(id: String!): Boolean!
+  approveLoanRequest(id: String!, input: ApproveLoanRequestInput!): LoanRequest!
+  rejectLoanRequest(id: String!, rejectionReason: String!): LoanRequest!
+  disburseLoan(id: String!): LoanRequest!
+  recordLoanPayment(loanId: String!, input: RecordLoanPaymentInput!): LoanRequest!
+  generateFinancialReport(input: GenerateFinancialReportInput!): FinancialReport!
+  
+  # Services management mutations
+  createServiceRequest(input: CreateServiceRequestInput!): ServiceRequest!
+  updateServiceRequest(id: String!, input: UpdateServiceRequestInput!): ServiceRequest!
+  deleteServiceRequest(id: String!): Boolean!
+  assignServiceRequest(serviceRequestId: String!, extensionOfficerId: String!, input: AssignServiceRequestInput!): ServiceAssignment!
+  acceptServiceAssignment(serviceRequestId: String!): ServiceRequest!
+  rejectServiceAssignment(serviceRequestId: String!, reason: String!): ServiceRequest!
+  updateServiceStatus(serviceRequestId: String!, status: String!, notes: String): ServiceRequest!
+  completeServiceRequest(serviceRequestId: String!, input: CompleteServiceRequestInput!): ServiceRequest!
+  rateService(serviceRequestId: String!, input: RateServiceInput!): ServiceRating!
+  cancelServiceRequest(serviceRequestId: String!, reason: String!): ServiceRequest!
+  rescheduleServiceRequest(serviceRequestId: String!, newDate: DateTime!, reason: String!): ServiceRequest!
+  
+  # Notifications mutations
+  createNotification(input: CreateNotificationInput!): Notification!
+  markNotificationAsRead(notificationId: String!): Notification!
+  markAllNotificationsAsRead: Boolean!
+  deleteNotification(notificationId: String!): Boolean!
+  sendSystemNotification(input: SendSystemNotificationInput!): [Notification!]!
+  sendNotificationToRole(role: String!, input: SendNotificationToRoleInput!): [Notification!]!
+  sendBroadcastNotification(input: SendBroadcastNotificationInput!): [Notification!]!
+  sendTargetedNotifications(input: SendTargetedNotificationsInput!): [Notification!]!
+  createNotificationTemplate(input: CreateNotificationTemplateInput!): NotificationTemplate!
+  updateNotificationTemplate(id: String!, input: UpdateNotificationTemplateInput!): NotificationTemplate!
+  deleteNotificationTemplate(id: String!): Boolean!
+  resendFailedNotifications(notificationId: String!): Boolean!
+  
+  # Orders/Marketplace mutations
+  createOrder(input: CreateOrderInput!): Order!
+  updateOrder(id: String!, input: UpdateOrderInput!): Order!
+  cancelOrder(id: String!, reason: String!): Order!
+  confirmOrder(id: String!): Order!
+  shipOrder(id: String!, input: ShipOrderInput!): Order!
+  deliverOrder(id: String!, input: DeliverOrderInput!): Order!
+  refundOrder(id: String!, input: RefundOrderInput!): Order!
+  createProduct(input: CreateProductInput!): Product!
+  updateProduct(id: String!, input: UpdateProductInput!): Product!
+  deleteProduct(id: String!): Boolean!
+  activateProduct(id: String!): Product!
+  deactivateProduct(id: String!): Product!
+  verifyProduct(id: String!): Product!
+  featureProduct(id: String!, featured: Boolean!): Product!
+  updateProductStock(productId: String!, quantity: Int!): Product!
+  createReview(input: CreateReviewInput!): Review!
+  updateReview(id: String!, input: UpdateReviewInput!): Review!
+  deleteReview(id: String!): Boolean!
+  markReviewHelpful(reviewId: String!): Review!
+  respondToReview(reviewId: String!, response: String!): Review!
+  createPayment(input: CreatePaymentInput!): Payment!
+  processPayment(paymentId: String!): Payment!
+  refundPayment(paymentId: String!, input: RefundPaymentInput!): Payment!
+}
+
+# Subscription type for real-time updates
+type Subscription {
+  # Real-time notifications
+  notificationReceived(userId: String!): Notification!
+  
+  # Real-time service updates
+  serviceRequestUpdated(serviceRequestId: String!): ServiceRequest!
+  
+  # Real-time order updates
+  orderStatusUpdated(orderId: String!): Order!
+  
+  # Real-time production updates
+  productionRecordAdded(userId: String!): ProductionRecord!
+  
+  # Real-time health alerts
+  healthAlertReceived(region: String!): HealthRecord!
+}

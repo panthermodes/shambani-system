@@ -1,0 +1,610 @@
+# Production Management GraphQL Schema
+type ProductionRecord {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  productionType: String! # EGGS, CHICKS, MEAT, PARENTAL_STOCK
+  chickenType: String
+  chickenCount: Int
+  productionDate: DateTime!
+  recordedAt: DateTime!
+  quantity: Float!
+  unit: String!
+  quality: String! # A, B, C, PREMIUM, STANDARD
+  weightPerUnit: Float
+  totalWeight: Float
+  hatchRate: Float
+  fertilityRate: Float
+  mortalityRate: Float
+  sellingPrice: Float
+  revenue: Float
+  cost: Float
+  profit: Float
+  notes: String
+  metadata: Json
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type EggProduction {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  productionDate: DateTime!
+  chickenType: String!
+  layingHens: Int!
+  totalEggs: Int!
+  gradeAEggs: Int!
+  gradeBEggs: Int!
+  gradeCEggs: Int!
+  brokenEggs: Int!
+  averageEggWeight: Float!
+  totalWeight: Float!
+  layingRate: Float!
+  sellingPricePerDozen: Float!
+  revenue: Float!
+  cost: Float!
+  profit: Float!
+  notes: String
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ChickHatching {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  hatchDate: DateTime!
+  incubatorId: String
+  eggType: String!
+  totalEggsSet: Int!
+  fertileEggs: Int!
+  hatchedChicks: Int!
+  unhatchedEggs: Int!
+  weakChicks: Int!
+  normalChicks: Int!
+  hatchRate: Float!
+  fertilityRate: Float!
+  mortalityRate: Float!
+  chickType: String!
+  costPerChick: Float!
+  totalCost: Float!
+  sellingPricePerChick: Float!
+  revenue: Float!
+  profit: Float!
+  notes: String
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type MortalityRecord {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  deathDate: DateTime!
+  chickenType: String!
+  totalChickens: Int!
+  deadChickens: Int!
+  mortalityRate: Float!
+  causeOfDeath: String!
+  suspectedDisease: String
+  ageInWeeks: Int!
+  weight: Float
+  symptoms: String
+  veterinarianDiagnosis: String
+  preventiveMeasures: String
+  cost: Float!
+  notes: String
+  metadata: Json
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type WeightRecord {
+  id: String!
+  userId: String!
+  farmId: String
+  houseId: String
+  weighingDate: DateTime!
+  chickenType: String!
+  chickenCount: Int!
+  ageInWeeks: Int!
+  averageWeight: Float!
+  minWeight: Float!
+  maxWeight: Float!
+  totalWeight: Float!
+  weightGain: Float!
+  weightGainRate: Float!
+  targetWeight: Float!
+  performanceIndicator: String! # EXCELLENT, GOOD, AVERAGE, POOR
+  feedConversionRatio: Float!
+  notes: String
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ProductionStats {
+  totalProductionRecords: Int!
+  totalEggsProduced: Int!
+  totalChicksHatched: Int!
+  totalMeatProduced: Float!
+  totalRevenue: Float!
+  totalCost: Float!
+  totalProfit: Float!
+  averageMortalityRate: Float!
+  averageHatchRate: Float!
+  averageLayingRate: Float!
+  productionByType: [ProductionByType!]!
+  monthlyProduction: [MonthlyProduction!]!
+  topPerformingFarms: [FarmProduction!]!
+  productionTrend: [ProductionTrendData!]!
+}
+
+type ProductionByType {
+  productionType: String!
+  totalQuantity: Float!
+  totalRevenue: Float!
+  totalCost: Float!
+  totalProfit: Float!
+  recordCount: Int!
+}
+
+type MonthlyProduction {
+  month: String!
+  year: Int!
+  eggsProduced: Int!
+  chicksHatched: Int!
+  meatProduced: Float!
+  revenue: Float!
+  cost: Float!
+  profit: Float!
+  mortalityRate: Float!
+}
+
+type FarmProduction {
+  farmId: String!
+  farmName: String!
+  totalProduction: Float!
+  totalRevenue: Float!
+  efficiency: Float!
+  rank: Int!
+}
+
+type ProductionTrendData {
+  date: String!
+  production: Float!
+  revenue: Float!
+  efficiency: Float!
+}
+
+extend type Query {
+  # Get production records
+  getProductionRecords(
+    farmId: String
+    houseId: String
+    productionType: String
+    startDate: DateTime
+    endDate: DateTime
+  ): [ProductionRecord!]!
+  
+  # Get single production record
+  getProductionRecord(id: String!): ProductionRecord
+  
+  # Get egg production records
+  getEggProduction(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): [EggProduction!]!
+  
+  # Get chick hatching records
+  getChickHatching(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): [ChickHatching!]!
+  
+  # Get mortality records
+  getMortalityRecords(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): [MortalityRecord!]!
+  
+  # Get weight records
+  getWeightRecords(farmId: String, houseId: String, chickenType: String, startDate: DateTime, endDate: DateTime): [WeightRecord!]!
+  
+  # Get production statistics
+  getProductionStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): ProductionStats!
+  
+  # Get admin production statistics
+  getAdminProductionStats(region: String, district: String): ProductionStats!
+  
+  # Get egg production statistics
+  getEggProductionStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): EggProductionStats!
+  
+  # Get chick hatching statistics
+  getChickHatchingStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): ChickHatchingStats!
+  
+  # Get mortality statistics
+  getMortalityStats(farmId: String, houseId: String, startDate: DateTime, endDate: DateTime): MortalityStats!
+  
+  # Get weight gain statistics
+  getWeightGainStats(farmId: String, houseId: String, chickenType: String, startDate: DateTime, endDate: DateTime): WeightGainStats!
+  
+  # Get production dashboard data
+  getProductionDashboard: ProductionDashboard!
+}
+
+extend type Mutation {
+  # Create production record
+  createProductionRecord(input: CreateProductionRecordInput!): ProductionRecord!
+  
+  # Update production record
+  updateProductionRecord(id: String!, input: UpdateProductionRecordInput!): ProductionRecord!
+  
+  # Delete production record
+  deleteProductionRecord(id: String!): Boolean!
+  
+  # Create egg production record
+  createEggProduction(input: CreateEggProductionInput!): EggProduction!
+  
+  # Update egg production record
+  updateEggProduction(id: String!, input: UpdateEggProductionInput!): EggProduction!
+  
+  # Delete egg production record
+  deleteEggProduction(id: String!): Boolean!
+  
+  # Create chick hatching record
+  createChickHatching(input: CreateChickHatchingInput!): ChickHatching!
+  
+  # Update chick hatching record
+  updateChickHatching(id: String!, input: UpdateChickHatchingInput!): ChickHatching!
+  
+  # Delete chick hatching record
+  deleteChickHatching(id: String!): Boolean!
+  
+  # Create mortality record
+  createMortalityRecord(input: CreateMortalityRecordInput!): MortalityRecord!
+  
+  # Update mortality record
+  updateMortalityRecord(id: String!, input: UpdateMortalityRecordInput!): MortalityRecord!
+  
+  # Delete mortality record
+  deleteMortalityRecord(id: String!): Boolean!
+  
+  # Create weight record
+  createWeightRecord(input: CreateWeightRecordInput!): WeightRecord!
+  
+  # Update weight record
+  updateWeightRecord(id: String!, input: UpdateWeightRecordInput!): WeightRecord!
+  
+  # Delete weight record
+  deleteWeightRecord(id: String!): Boolean!
+}
+
+type EggProductionStats {
+  totalEggs: Int!
+  gradeAEggs: Int!
+  gradeBEggs: Int!
+  gradeCEggs: Int!
+  averageEggWeight: Float!
+  layingRate: Float!
+  revenue: Float!
+  cost: Float!
+  profit: Float!
+  monthlyTrend: [MonthlyEggTrend!]!
+}
+
+type ChickHatchingStats {
+  totalEggsSet: Int!
+  totalChicksHatched: Int!
+  hatchRate: Float!
+  fertilityRate: Float!
+  mortalityRate: Float!
+  revenue: Float!
+  cost: Float!
+  profit: Float!
+  monthlyTrend: [MonthlyHatchTrend!]!
+}
+
+type MortalityStats {
+  totalDeaths: Int!
+  averageMortalityRate: Float!
+  deathsByCause: [DeathByCause!]!
+  deathsByAge: [DeathByAge!]!
+  costOfMortality: Float!
+  monthlyTrend: [MonthlyMortalityTrend!]!
+}
+
+type WeightGainStats {
+  averageWeightGain: Float!
+  averageFeedConversionRatio: Float!
+  performanceDistribution: [PerformanceDistribution!]!
+  weightByAge: [WeightByAge!]!
+  targetAchievement: Float!
+}
+
+type ProductionDashboard {
+  todayProduction: TodayProduction!
+  weeklyComparison: WeeklyComparison!
+  monthlyOverview: MonthlyOverview!
+  alerts: [ProductionAlert!]!
+  topPerformers: [TopPerformer!]!
+}
+
+type TodayProduction {
+  eggsProduced: Int!
+  chicksHatched: Int!
+  currentMortality: Int!
+  revenue: Float!
+}
+
+type WeeklyComparison {
+  thisWeek: WeeklyData!
+  lastWeek: WeeklyData!
+  changePercentage: Float!
+}
+
+type MonthlyOverview {
+  currentMonth: MonthlyData!
+  lastMonth: MonthlyData!
+  changePercentage: Float!
+}
+
+type ProductionAlert {
+  type: String!
+  message: String!
+  severity: String!
+  farmId: String
+  houseId: String
+}
+
+type TopPerformer {
+  category: String!
+  farmName: String!
+  value: Float!
+  unit: String!
+}
+
+type MonthlyEggTrend {
+  month: String!
+  eggsProduced: Int!
+  layingRate: Float!
+  revenue: Float!
+}
+
+type MonthlyHatchTrend {
+  month: String!
+  chicksHatched: Int!
+  hatchRate: Float!
+  revenue: Float!
+}
+
+type MonthlyMortalityTrend {
+  month: String!
+  deaths: Int!
+  mortalityRate: Float!
+  cost: Float!
+}
+
+type DeathByCause {
+  cause: String!
+  count: Int!
+  percentage: Float!
+}
+
+type DeathByAge {
+  ageGroup: String!
+  count: Int!
+  percentage: Float!
+}
+
+type PerformanceDistribution {
+  performance: String!
+  count: Int!
+  percentage: Float!
+}
+
+type WeightByAge {
+  ageInWeeks: Int!
+  averageWeight: Float!
+  targetWeight: Float!
+}
+
+type WeeklyData {
+  production: Float!
+  revenue: Float!
+  cost: Float!
+  profit: Float!
+}
+
+type MonthlyData {
+  production: Float!
+  revenue: Float!
+  cost: Float!
+  profit: Float!
+}
+
+input CreateProductionRecordInput {
+  farmId: String
+  houseId: String
+  productionType: String!
+  chickenType: String
+  chickenCount: Int
+  productionDate: DateTime!
+  quantity: Float!
+  unit: String!
+  quality: String
+  weightPerUnit: Float
+  totalWeight: Float
+  hatchRate: Float
+  fertilityRate: Float
+  mortalityRate: Float
+  sellingPrice: Float
+  cost: Float
+  notes: String
+}
+
+input UpdateProductionRecordInput {
+  farmId: String
+  houseId: String
+  productionType: String
+  chickenType: String
+  chickenCount: Int
+  productionDate: DateTime
+  quantity: Float
+  unit: String
+  quality: String
+  weightPerUnit: Float
+  totalWeight: Float
+  hatchRate: Float
+  fertilityRate: Float
+  mortalityRate: Float
+  sellingPrice: Float
+  cost: Float
+  notes: String
+}
+
+input CreateEggProductionInput {
+  farmId: String
+  houseId: String
+  productionDate: DateTime!
+  chickenType: String!
+  layingHens: Int!
+  totalEggs: Int!
+  gradeAEggs: Int!
+  gradeBEggs: Int!
+  gradeCEggs: Int!
+  brokenEggs: Int!
+  averageEggWeight: Float!
+  totalWeight: Float!
+  layingRate: Float!
+  sellingPricePerDozen: Float!
+  cost: Float!
+  notes: String
+}
+
+input UpdateEggProductionInput {
+  farmId: String
+  houseId: String
+  productionDate: DateTime
+  chickenType: String
+  layingHens: Int
+  totalEggs: Int
+  gradeAEggs: Int
+  gradeBEggs: Int
+  gradeCEggs: Int
+  brokenEggs: Int
+  averageEggWeight: Float
+  totalWeight: Float
+  layingRate: Float
+  sellingPricePerDozen: Float
+  cost: Float
+  notes: String
+}
+
+input CreateChickHatchingInput {
+  farmId: String
+  houseId: String
+  hatchDate: DateTime!
+  incubatorId: String
+  eggType: String!
+  totalEggsSet: Int!
+  fertileEggs: Int!
+  hatchedChicks: Int!
+  unhatchedEggs: Int!
+  weakChicks: Int!
+  normalChicks: Int!
+  chickType: String!
+  costPerChick: Float!
+  totalCost: Float!
+  sellingPricePerChick: Float!
+  notes: String
+}
+
+input UpdateChickHatchingInput {
+  farmId: String
+  houseId: String
+  hatchDate: DateTime
+  incubatorId: String
+  eggType: String
+  totalEggsSet: Int
+  fertileEggs: Int
+  hatchedChicks: Int
+  unhatchedEggs: Int
+  weakChicks: Int
+  normalChicks: Int
+  chickType: String
+  costPerChick: Float
+  totalCost: Float
+  sellingPricePerChick: Float
+  notes: String
+}
+
+input CreateMortalityRecordInput {
+  farmId: String
+  houseId: String
+  deathDate: DateTime!
+  chickenType: String!
+  totalChickens: Int!
+  deadChickens: Int!
+  causeOfDeath: String!
+  suspectedDisease: String
+  ageInWeeks: Int!
+  weight: Float
+  symptoms: String
+  veterinarianDiagnosis: String
+  preventiveMeasures: String
+  cost: Float!
+  notes: String
+}
+
+input UpdateMortalityRecordInput {
+  farmId: String
+  houseId: String
+  deathDate: DateTime
+  chickenType: String
+  totalChickens: Int
+  deadChickens: Int
+  causeOfDeath: String
+  suspectedDisease: String
+  ageInWeeks: Int
+  weight: Float
+  symptoms: String
+  veterinarianDiagnosis: String
+  preventiveMeasures: String
+  cost: Float
+  notes: String
+}
+
+input CreateWeightRecordInput {
+  farmId: String
+  houseId: String
+  weighingDate: DateTime!
+  chickenType: String!
+  chickenCount: Int!
+  ageInWeeks: Int!
+  averageWeight: Float!
+  minWeight: Float!
+  maxWeight: Float!
+  totalWeight: Float!
+  weightGain: Float!
+  targetWeight: Float!
+  feedConversionRatio: Float!
+  notes: String
+}
+
+input UpdateWeightRecordInput {
+  farmId: String
+  houseId: String
+  weighingDate: DateTime
+  chickenType: String
+  chickenCount: Int
+  ageInWeeks: Int
+  averageWeight: Float
+  minWeight: Float
+  maxWeight: Float
+  totalWeight: Float
+  weightGain: Float
+  targetWeight: Float
+  feedConversionRatio: Float
+  notes: String
+}
